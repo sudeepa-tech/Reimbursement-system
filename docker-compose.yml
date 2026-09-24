@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: reimbursepro-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
+      - CORS_ORIGIN=*
+      - NODE_ENV=production
+    volumes:
+      - backend_db:/app/db
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: reimbursepro-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend_db:
+  backend_uploads:
