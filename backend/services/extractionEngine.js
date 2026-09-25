@@ -191,8 +191,23 @@ function runExtractionPipeline({ text, ocrMeta }) {
   const category = classifyCategory(text, merchant, log);
   const paymentMethod = detectPaymentMethod(text, log);
 
-  const fieldConfidences = log.filter(s => s.name !== 'Document Ingestion').map(s => s.confidence);
-  const overallConfidence = Math.round((fieldConfidences.reduce((a, b) => a + b, 0) / fieldConfidences.length) * 100) / 100;
+  // const fieldConfidences = log.filter(s => s.name !== 'Document Ingestion').map(s => s.confidence);
+  // const overallConfidence = Math.round((fieldConfidences.reduce((a, b) => a + b, 0) / fieldConfidences.length) * 100) / 100;
+
+
+  const fieldConfidences = log
+  .filter(s => s.name !== 'Document Ingestion')
+  .map(s => Number(s.confidence))
+  .filter(Number.isFinite);
+
+const overallConfidence = fieldConfidences.length > 0
+  ? Math.round(
+      (
+        fieldConfidences.reduce((a, b) => a + b, 0) /
+        fieldConfidences.length
+      ) * 100
+    ) / 100
+  : Number(ocrMeta.confidence || 0);
 
   step(log, 'Field Mapping & Validation', 'Cross-validated extracted fields (amount vs. tax vs. line items) and mapped them into the reimbursement claim form.', 'All fields mapped to form', overallConfidence);
 

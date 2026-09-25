@@ -397,10 +397,18 @@ async function extractFromImage(filePath, onProgress) {
       .filter(line => line.trim().length > 0)
       .length;
 
+    // const confidence = Math.min(
+    //   0.98,
+    //   0.6 + Math.min(nonEmptyLines, 20) * 0.018
+    // );
+
     const confidence = Math.min(
-      0.98,
-      0.6 + Math.min(nonEmptyLines, 20) * 0.018
-    );
+  0.98,
+  0.6 + Math.min(nonEmptyLines, 20) * 0.018
+);
+
+console.log('📊 OCR confidence:', confidence);
+console.log('📝 OCR text preview:', text.substring(0, 300));
 
     console.log(
       `✅ OCR completed successfully. Extracted ${text.length} characters.`
