@@ -346,35 +346,118 @@ try {
 // IMAGE OCR
 // -----------------------------------------------------------------------
 
+// async function extractFromImage(filePath, onProgress) {
+//   if (onProgress) {
+//     onProgress(10);
+//   }
+
+//   // Check whether Tesseract was found.
+//   if (!TESSERACT_BINARY) {
+//     throw new Error(
+//       [
+//         'Tesseract OCR is not available on this server.',
+//         '',
+//         'For Windows, install Tesseract OCR at:',
+//         'C:\\Program Files\\Tesseract-OCR\\tesseract.exe',
+//         '',
+//         'For Render/Linux, make sure the Docker image installs:',
+//         'tesseract-ocr',
+//         'tesseract-ocr-eng'
+//       ].join('\n')
+//     );
+//   }
+
+//   // Check that uploaded image actually exists.
+//   if (!fs.existsSync(filePath)) {
+//     throw new Error(`Uploaded image was not found: ${filePath}`);
+//   }
+
+//   try {
+//     console.log(`🔍 OCR processing image: ${filePath}`);
+//     console.log(`🔧 Tesseract binary: ${TESSERACT_BINARY}`);
+
+//     const text = await tesseractCli.recognize(filePath, {
+//       binary: TESSERACT_BINARY,
+//       lang: 'eng',
+//       oem: 1,
+//       psm: 3
+//     });
+
+//     if (onProgress) {
+//       onProgress(100);
+//     }
+
+//     // -------------------------------------------------------------
+//     // Calculate a simple proxy confidence.
+//     // node-tesseract-ocr doesn't directly expose confidence here.
+//     // -------------------------------------------------------------
+
+//     const nonEmptyLines = text
+//       .split('\n')
+//       .filter(line => line.trim().length > 0)
+//       .length;
+
+//     // const confidence = Math.min(
+//     //   0.98,
+//     //   0.6 + Math.min(nonEmptyLines, 20) * 0.018
+//     // );
+
+//     const confidence = Math.min(
+//   0.98,
+//   0.6 + Math.min(nonEmptyLines, 20) * 0.018
+// );
+
+// console.log('📊 OCR confidence:', confidence);
+// console.log('📝 OCR text preview:', text.substring(0, 300));
+
+//     console.log(
+//       `✅ OCR completed successfully. Extracted ${text.length} characters.`
+//     );
+
+//     return {
+//       text,
+//       confidence: Math.round(confidence * 100) / 100,
+//       engine: 'Tesseract OCR 5.x (native, LSTM neural network)'
+//     };
+
+//   } catch (err) {
+//     console.error('❌ Tesseract OCR failed:');
+//     console.error(err);
+
+//     throw new Error(
+//       `OCR engine failed to process the image: ${err.message}`
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
 async function extractFromImage(filePath, onProgress) {
-  if (onProgress) {
-    onProgress(10);
-  }
+  if (onProgress) onProgress(10);
 
-  // Check whether Tesseract was found.
   if (!TESSERACT_BINARY) {
-    throw new Error(
-      [
-        'Tesseract OCR is not available on this server.',
-        '',
-        'For Windows, install Tesseract OCR at:',
-        'C:\\Program Files\\Tesseract-OCR\\tesseract.exe',
-        '',
-        'For Render/Linux, make sure the Docker image installs:',
-        'tesseract-ocr',
-        'tesseract-ocr-eng'
-      ].join('\n')
-    );
+    throw new Error('Tesseract OCR is not available on this server.');
   }
 
-  // Check that uploaded image actually exists.
   if (!fs.existsSync(filePath)) {
     throw new Error(`Uploaded image was not found: ${filePath}`);
   }
 
+  console.log('========================================');
+  console.log('🖼️ IMAGE OCR START');
+  console.log(`📁 File: ${filePath}`);
+  console.log(`🔧 Binary: ${TESSERACT_BINARY}`);
+  console.log(`📦 File exists: ${fs.existsSync(filePath)}`);
+  console.log(`📏 File size: ${fs.statSync(filePath).size}`);
+  console.log('========================================');
+
   try {
-    console.log(`🔍 OCR processing image: ${filePath}`);
-    console.log(`🔧 Tesseract binary: ${TESSERACT_BINARY}`);
+    console.log('🚀 Starting Tesseract recognize()...');
 
     const text = await tesseractCli.recognize(filePath, {
       binary: TESSERACT_BINARY,
@@ -383,36 +466,25 @@ async function extractFromImage(filePath, onProgress) {
       psm: 3
     });
 
-    if (onProgress) {
-      onProgress(100);
-    }
+    console.log('✅ Tesseract recognize() returned successfully.');
+    console.log(`📝 Extracted characters: ${text ? text.length : 0}`);
 
-    // -------------------------------------------------------------
-    // Calculate a simple proxy confidence.
-    // node-tesseract-ocr doesn't directly expose confidence here.
-    // -------------------------------------------------------------
+    if (onProgress) onProgress(100);
+
+    if (!text || text.trim().length === 0) {
+      throw new Error('Tesseract completed but extracted no text.');
+    }
 
     const nonEmptyLines = text
       .split('\n')
-      .filter(line => line.trim().length > 0)
-      .length;
-
-    // const confidence = Math.min(
-    //   0.98,
-    //   0.6 + Math.min(nonEmptyLines, 20) * 0.018
-    // );
+      .filter(line => line.trim().length > 0).length;
 
     const confidence = Math.min(
-  0.98,
-  0.6 + Math.min(nonEmptyLines, 20) * 0.018
-);
-
-console.log('📊 OCR confidence:', confidence);
-console.log('📝 OCR text preview:', text.substring(0, 300));
-
-    console.log(
-      `✅ OCR completed successfully. Extracted ${text.length} characters.`
+      0.98,
+      0.6 + Math.min(nonEmptyLines, 20) * 0.018
     );
+
+    console.log('✅ IMAGE OCR COMPLETE');
 
     return {
       text,
@@ -421,15 +493,19 @@ console.log('📝 OCR text preview:', text.substring(0, 300));
     };
 
   } catch (err) {
-    console.error('❌ Tesseract OCR failed:');
-    console.error(err);
+    console.error('========================================');
+    console.error('❌ TESSERACT OCR FAILED');
+    console.error('Message:', err?.message);
+    console.error('Name:', err?.name);
+    console.error('Code:', err?.code);
+    console.error('Stack:', err?.stack);
+    console.error('========================================');
 
     throw new Error(
-      `OCR engine failed to process the image: ${err.message}`
+      `OCR engine failed to process the image: ${err?.message || err}`
     );
   }
 }
-
 
 // -----------------------------------------------------------------------
 // PDF EXTRACTION

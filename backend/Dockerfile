@@ -70,13 +70,27 @@
 FROM node:20-bookworm-slim
 
 # Install Tesseract OCR and English language data
+# RUN apt-get update \
+#     && apt-get install -y --no-install-recommends \
+#        tesseract-ocr \
+#        tesseract-ocr-eng \
+#     && echo "===== TESSERACT CHECK =====" \
+#     && tesseract --version \
+#     && which tesseract \
+#     && echo "===== TESSERACT CHECK COMPLETE =====" \
+#     && rm -rf /var/lib/apt/lists/*
+
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        tesseract-ocr \
        tesseract-ocr-eng \
-    && echo "===== TESSERACT CHECK =====" \
+    && echo "===== TESSERACT VERSION =====" \
     && tesseract --version \
+    && echo "===== TESSERACT PATH =====" \
     && which tesseract \
+    && echo "===== TESSDATA =====" \
+    && tesseract --list-langs \
     && echo "===== TESSERACT CHECK COMPLETE =====" \
     && rm -rf /var/lib/apt/lists/*
 
