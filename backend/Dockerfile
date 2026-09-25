@@ -1,24 +1,24 @@
-# ReimbursePro Backend - Production Dockerfile
-FROM node:18-slim
+FROM node:20-bookworm-slim
 
-# Install system Tesseract OCR (used for image receipt extraction)
-RUN apt-get update && apt-get install -y \
-    tesseract-ocr \
-    tesseract-ocr-eng \
+# Install Tesseract OCR
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       tesseract-ocr \
+       tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Copy package files first
 COPY package*.json ./
-RUN npm ci --omit=dev
 
+# Install Node dependencies
+RUN npm install
+
+# Copy backend source code
 COPY . .
 
-RUN mkdir -p uploads db
-
-ENV NODE_ENV=production
+# Render provides PORT automatically
 EXPOSE 5000
 
-# Seed the database on first boot if empty (server.js already handles this),
-# then start the API.
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
