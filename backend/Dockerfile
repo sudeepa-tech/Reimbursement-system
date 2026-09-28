@@ -96,6 +96,7 @@ RUN apt-get update \
 
 # Backend working directory
 WORKDIR /app
+ENV OMP_THREAD_LIMIT=1
 
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
